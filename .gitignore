@@ -309,7 +309,6 @@ vector_db/
 pinecone_cache/
 
 # Model files
-models/
 *.model
 *.pkl
 *.joblib
