@@ -331,6 +331,93 @@ class DatabaseRepository:
                 }
             )
     
+    async def store_url_hash_mapping(self, url_hash: str, url: str, document_id: str) -> bool:
+        """
+        Store URL hash mapping for document caching.
+        
+        Args:
+            url_hash: SHA256 hash of the URL
+            url: Original document URL
+            document_id: Associated document ID
+            
+        Returns:
+            bool: True if storage was successful
+        """
+        try:
+            async with self.get_connection() as conn:
+                await conn.execute(
+                    """
+                    INSERT INTO document_url_cache (url_hash, url, document_id, created_at)
+                    VALUES ($1, $2, $3, $4)
+                    ON CONFLICT (url_hash) DO UPDATE SET
+                        url = EXCLUDED.url,
+                        document_id = EXCLUDED.document_id,
+                        created_at = EXCLUDED.created_at
+                    """,
+                    url_hash, url, document_id, datetime.utcnow()
+                )
+                
+                logger.debug(f"Stored URL hash mapping for document {document_id}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Failed to store URL hash mapping: {str(e)}")
+            raise DatabaseError(
+                message="Failed to store URL hash mapping",
+                operation="store_url_hash_mapping",
+                details={
+                    "url_hash": url_hash,
+                    "document_id": document_id,
+                    "error": str(e)
+                }
+            )
+    
+    async def get_document_by_url_hash(self, url_hash: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve document metadata by URL hash.
+        
+        Args:
+            url_hash: SHA256 hash of the URL
+            
+        Returns:
+            Optional[Dict[str, Any]]: Document metadata or None if not found
+        """
+        try:
+            async with self.get_connection() as conn:
+                row = await conn.fetchrow(
+                    """
+                    SELECT d.id, d.url, d.content_type, d.processed_at, d.chunk_count, d.status
+                    FROM documents d
+                    JOIN document_url_cache c ON d.id = c.document_id
+                    WHERE c.url_hash = $1
+                    """,
+                    url_hash
+                )
+                
+                if row:
+                    metadata = {
+                        "id": str(row["id"]),
+                        "url": row["url"],
+                        "content_type": row["content_type"],
+                        "processed_at": row["processed_at"].isoformat(),
+                        "chunk_count": row["chunk_count"],
+                        "status": row["status"]
+                    }
+                    return metadata
+                else:
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Failed to retrieve document by URL hash: {str(e)}")
+            raise DatabaseError(
+                message="Failed to retrieve document by URL hash",
+                operation="get_document_by_url_hash",
+                details={
+                    "url_hash": url_hash,
+                    "error": str(e)
+                }
+            )
+
     async def delete_document(self, document_id: str) -> bool:
         """
         Delete document and all associated query sessions.
@@ -347,7 +434,13 @@ class DatabaseRepository:
         try:
             async with self.get_connection() as conn:
                 async with conn.transaction():
-                    # Delete query sessions first (foreign key constraint)
+                    # Delete URL cache mapping first
+                    await conn.execute(
+                        "DELETE FROM document_url_cache WHERE document_id = $1",
+                        document_id
+                    )
+                    
+                    # Delete query sessions (foreign key constraint)
                     await conn.execute(
                         "DELETE FROM query_sessions WHERE document_id = $1",
                         document_id

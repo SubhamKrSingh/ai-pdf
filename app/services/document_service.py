@@ -20,6 +20,7 @@ from app.utils.document_downloader import DocumentDownloader, DocumentDownloadEr
 from app.utils.parsers.document_parser import DocumentParser, DocumentParseError, UnsupportedDocumentTypeError
 from app.utils.text_chunker import TextChunker, ChunkingConfig
 from app.services.embedding_service import get_embedding_service, EmbeddingServiceError
+from app.services.document_cache_service import get_document_cache_service
 from app.data.vector_store import get_vector_store, VectorStoreError
 from app.data.repository import get_repository, DatabaseError
 
@@ -135,7 +136,7 @@ class DocumentProcessingService:
         progress_callback: Optional[Callable[[ProcessingStatus], None]] = None
     ) -> str:
         """
-        Process a document through the complete pipeline.
+        Process a document through the complete pipeline with caching support.
         
         Args:
             url: URL of the document to process
@@ -147,6 +148,22 @@ class DocumentProcessingService:
         Raises:
             DocumentProcessingError: If processing fails at any stage
         """
+        # Check cache first for massive performance improvement
+        cache_service = get_document_cache_service()
+        cached_document_id = await cache_service.get_cached_document(url)
+        
+        if cached_document_id:
+            logger.info(f"Using cached document {cached_document_id} for URL: {url}")
+            
+            # Create a minimal status for cached documents
+            if progress_callback:
+                status = ProcessingStatus(cached_document_id)
+                status.add_callback(progress_callback)
+                status.update_stage(ProcessingStage.COMPLETED, 100.0)
+            
+            return cached_document_id
+        
+        # No cache hit, proceed with full processing
         document_id = str(uuid4())
         status = ProcessingStatus(document_id)
         
@@ -184,6 +201,9 @@ class DocumentProcessingService:
                 document_id, url, content_type, len(embedded_chunks), 
                 len(content), status.get_elapsed_time() * 1000
             )
+            
+            # Stage 7: Cache the processed document
+            await cache_service.cache_document(url, document_id)
             
             # Complete processing
             status.update_stage(ProcessingStage.COMPLETED, 100.0)

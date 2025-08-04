@@ -113,6 +113,25 @@ class Settings(BaseSettings):
         default=5, description="Timeout for health check operations in seconds"
     )
     
+    
+    # Caching Configuration
+    document_cache_ttl_hours: int = Field(default=24, description="Document cache TTL in hours")
+    embedding_cache_ttl_hours: int = Field(default=168, description="Embedding cache TTL in hours")
+    
+    # HTTP Client Optimization
+    max_http_connections: int = Field(default=50, description="Maximum HTTP connections")
+    max_keepalive_connections: int = Field(default=25, description="Maximum keepalive connections")
+    keepalive_expiry: int = Field(default=30, description="Keepalive expiry in seconds")
+    
+    # Vector Search Optimization
+    default_top_k: int = Field(default=5, description="Default top-k for vector search")
+    min_similarity_threshold: float = Field(default=0.4, description="Minimum similarity threshold")
+    max_context_chunks: int = Field(default=3, description="Maximum context chunks for LLM")
+    
+    # Optional Redis Configuration
+    redis_url: Optional[str] = Field(default=None, description="Redis connection URL")
+    enable_redis_cache: bool = Field(default=False, description="Enable Redis caching")
+
     model_config = ConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

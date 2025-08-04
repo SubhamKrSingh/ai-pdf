@@ -68,7 +68,7 @@ class EmbeddingService:
         self._cache: Dict[str, CachedEmbedding] = {}
         self._cache_ttl = timedelta(hours=24)  # Cache for 24 hours
         
-        # HTTP client with extended timeout for embedding operations
+        # HTTP client with optimized settings for embedding operations
         # Embedding generation can take longer than regular API calls
         embedding_timeout = max(self.settings.request_timeout * 2, 60)  # At least 60 seconds
         self.client = httpx.AsyncClient(
@@ -78,7 +78,12 @@ class EmbeddingService:
                 write=10.0,  # Write timeout
                 pool=5.0  # Pool timeout
             ),
-            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5)
+            limits=httpx.Limits(
+                max_connections=20,  # Increased for better concurrency
+                max_keepalive_connections=10,  # Keep more connections alive
+                keepalive_expiry=30.0  # Keep connections alive longer
+            ),
+            http2=True  # Enable HTTP/2 for better performance
         )
     
     async def __aenter__(self):

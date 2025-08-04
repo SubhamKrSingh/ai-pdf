@@ -237,6 +237,54 @@ class DatabaseMigrator:
                 details={"error": str(e)}
             )
     
+    async def create_document_url_cache_table(self, conn: Connection) -> None:
+        """
+        Create document_url_cache table for URL-based document caching.
+        
+        Args:
+            conn: Database connection
+            
+        Raises:
+            MigrationError: If table creation fails
+        """
+        migration_name = "003_create_document_url_cache_table"
+        
+        if await self.is_migration_applied(conn, migration_name):
+            logger.info(f"Migration {migration_name} already applied")
+            return
+        
+        try:
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS document_url_cache (
+                    url_hash VARCHAR(64) PRIMARY KEY,
+                    url TEXT NOT NULL,
+                    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+                    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+                );
+
+                -- Index for fast lookups
+                CREATE INDEX IF NOT EXISTS idx_document_url_cache_document_id ON document_url_cache(document_id);
+                CREATE INDEX IF NOT EXISTS idx_document_url_cache_created_at ON document_url_cache(created_at);
+
+                -- Add comment for documentation
+                COMMENT ON TABLE document_url_cache IS 'Caches processed documents by URL hash to avoid reprocessing the same documents';
+                COMMENT ON COLUMN document_url_cache.url_hash IS 'SHA256 hash of the document URL for fast lookups';
+                COMMENT ON COLUMN document_url_cache.url IS 'Original document URL';
+                COMMENT ON COLUMN document_url_cache.document_id IS 'Reference to the processed document';
+                COMMENT ON COLUMN document_url_cache.created_at IS 'When this cache entry was created';
+            """)
+            
+            await self.record_migration(conn, migration_name)
+            logger.info("Created document_url_cache table with indexes")
+            
+        except Exception as e:
+            logger.error(f"Failed to create document_url_cache table: {str(e)}")
+            raise MigrationError(
+                message="Failed to create document_url_cache table",
+                migration_name=migration_name,
+                details={"error": str(e)}
+            )
+    
     async def create_extensions(self, conn: Connection) -> None:
         """
         Create required PostgreSQL extensions.
@@ -295,6 +343,7 @@ class DatabaseMigrator:
                 ("000_create_extensions", self.create_extensions),
                 ("001_create_documents_table", self.create_documents_table),
                 ("002_create_query_sessions_table", self.create_query_sessions_table),
+                ("003_create_document_url_cache_table", self.create_document_url_cache_table),
             ]
             
             for migration_name, migration_func in migrations:

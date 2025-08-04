@@ -253,7 +253,7 @@ $RECYCLE.BIN/
 *.db
 *.sqlite
 *.sqlite3
-
+data/
 database/
 
 # Log files
@@ -309,6 +309,7 @@ vector_db/
 pinecone_cache/
 
 # Model files
+models/
 *.model
 *.pkl
 *.joblib
