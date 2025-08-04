@@ -1,0 +1,156 @@
+{
+  "overall_status": "PASSED_WITH_WARNINGS",
+  "total_tests": 11,
+  "passed_tests": 8,
+  "failed_tests": 3,
+  "success_rate": 72.72727272727273,
+  "categories": {
+    "Project Structure": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "Code Quality": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "Configuration": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "Documentation": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "Test Coverage": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "Error Handling": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "Security": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1
+    },
+    "Performance": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1
+    },
+    "Deployment": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "Requirements Compliance": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1
+    }
+  },
+  "results": [
+    {
+      "category": "Project Structure",
+      "test_name": "Required Files Check",
+      "passed": true,
+      "details": "All required files present",
+      "duration": 0.0007007122039794922,
+      "error": null
+    },
+    {
+      "category": "Project Structure",
+      "test_name": "Directory Structure Check",
+      "passed": true,
+      "details": "All required directories present",
+      "duration": 0.0011551380157470703,
+      "error": null
+    },
+    {
+      "category": "Code Quality",
+      "test_name": "Module Import Check",
+      "passed": true,
+      "details": "All core modules import successfully",
+      "duration": 3.7319040298461914,
+      "error": null
+    },
+    {
+      "category": "Configuration",
+      "test_name": "Configuration Loading",
+      "passed": true,
+      "details": "Configuration loads successfully",
+      "duration": 0.0036177635192871094,
+      "error": null
+    },
+    {
+      "category": "Documentation",
+      "test_name": "Documentation Completeness",
+      "passed": true,
+      "details": "All 8 documentation files present",
+      "duration": 0.0017244815826416016,
+      "error": null
+    },
+    {
+      "category": "Test Coverage",
+      "test_name": "Test Coverage Structure",
+      "passed": true,
+      "details": "Found 28 test files, all key tests present",
+      "duration": 0.0010211467742919922,
+      "error": null
+    },
+    {
+      "category": "Error Handling",
+      "test_name": "Error Handling Implementation",
+      "passed": true,
+      "details": "All error handling components present and importable",
+      "duration": 0.00032639503479003906,
+      "error": null
+    },
+    {
+      "category": "Security",
+      "test_name": "Security Implementation",
+      "passed": false,
+      "details": "Security modules import failed",
+      "duration": 0.005054950714111328,
+      "error": "cannot import name 'get_password_hash' from 'app.security' (C:\\Users\\mrsub\\bajaj 2\\app\\security.py)"
+    },
+    {
+      "category": "Performance",
+      "test_name": "Performance Validation",
+      "passed": false,
+      "details": "Failed to validate performance considerations",
+      "duration": 0.009752511978149414,
+      "error": "'charmap' codec can't decode byte 0x8d in position 2462: character maps to <undefined>"
+    },
+    {
+      "category": "Deployment",
+      "test_name": "Deployment Readiness",
+      "passed": true,
+      "details": "All deployment files present, 2 deployment scripts",
+      "duration": 0.0012173652648925781,
+      "error": null
+    },
+    {
+      "category": "Requirements Compliance",
+      "test_name": "Requirements Validation",
+      "passed": false,
+      "details": "Failed to validate requirements compliance",
+      "duration": 0.0002448558807373047,
+      "error": "'charmap' codec can't decode byte 0x8d in position 2462: character maps to <undefined>"
+    }
+  ],
+  "recommendations": [
+    "Review and address failed validation items",
+    "Address 1 issues in Security",
+    "Address 1 issues in Performance",
+    "Address 1 issues in Requirements Compliance",
+    "System mostly ready - address warnings before production deployment"
+  ]
+}

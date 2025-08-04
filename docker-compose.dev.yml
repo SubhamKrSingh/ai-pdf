@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DATABASE_URL=postgresql://postgres:password@db:5432/llm_query_db_dev
+      - LOG__LOG_LEVEL=DEBUG
+      - LOG__LOG_FORMAT=text
+      - LOG__ENABLE_ACCESS_LOGS=true
+      - LOG__ENABLE_SQL_LOGS=true
+      - SECURITY__ALLOWED_HOSTS=["*"]
+      - SECURITY__CORS_ORIGINS=["*"]
+      - HEALTH__ENABLE_DETAILED_HEALTH=true
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    restart: unless-stopped
+    command: ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: llm_query_db_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_dev_data:
