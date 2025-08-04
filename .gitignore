@@ -253,7 +253,7 @@ $RECYCLE.BIN/
 *.db
 *.sqlite
 *.sqlite3
-data/
+
 database/
 
 # Log files
